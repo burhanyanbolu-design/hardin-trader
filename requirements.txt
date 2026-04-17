@@ -1,0 +1,8 @@
+alpaca-trade-api
+pandas
+numpy
+python-dotenv
+pytz
+flask
+flask-cors
+requests
