@@ -77,6 +77,7 @@ nav { background:#0a0a14; border-bottom:1px solid rgba(0,229,255,0.15); padding:
     <div class="card-title">Today's P&L</div>
     <div class="big-num green" id="dailyPnl">$0.00</div>
     <div class="label">Daily profit / loss</div>
+    <div id="targetStatus" style="font-size:11px;color:#555;margin-top:6px;">Hunting for setups...</div>
     <div style="margin-top:12px;display:flex;gap:16px;">
       <div><div style="font-size:18px;font-weight:700;" id="tradesCount">0</div><div class="label">Trades today</div></div>
       <div><div style="font-size:18px;font-weight:700;color:#2ecc71;" id="winRate">-</div><div class="label">All-time win rate</div></div>
@@ -126,6 +127,17 @@ async function fetchStatus() {
     pnlEl.className = 'big-num ' + (pnl >= 0 ? 'green' : 'red');
 
     document.getElementById('tradesCount').textContent = d.trades_today || 0;
+    // Show target hit warning
+    const targetEl = document.getElementById('targetStatus');
+    if (targetEl) {
+      if (d.target_hit) {
+        targetEl.textContent = '✓ Daily target hit — only trading score 14+ overrides';
+        targetEl.style.color = '#f0c040';
+      } else {
+        targetEl.textContent = 'Hunting for setups...';
+        targetEl.style.color = '#555';
+      }
+    }
 
     // Memory stats
     const mem = d.memory || {};

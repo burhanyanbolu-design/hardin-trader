@@ -23,7 +23,9 @@ BASE_URL   = os.getenv('ALPACA_BASE_URL', 'https://paper-api.alpaca.markets')
 if BASE_URL and not BASE_URL.startswith('http'):
     BASE_URL = 'https://' + BASE_URL.lstrip('/')
 
-MAX_DAILY_TRADES = 1   # ONE trade per day — go big or go home
+MAX_DAILY_TRADES = 10  # allow multiple trades if signals are strong
+DAILY_PROFIT_TARGET = float(os.getenv('DAILY_PROFIT_TARGET', 1000))  # stop after this profit
+OVERRIDE_SCORE = 14   # if signal score >= this, trade even after target hit
 
 # ── Dynamic scaling table ─────────────────────────────────────────────────────
 # Score → (position_size, min_target_pct, max_target_pct, stop_loss_pct, tier_name)
@@ -61,11 +63,12 @@ trade_log = []
 status = {
     'running':       False,
     'trades_today':  0,
-    'active_trade':  None,   # current open trade details
+    'active_trade':  None,
     'last_scan':     None,
-    'best_signal':   None,   # best opportunity found in last scan
+    'best_signal':   None,
     'error':         None,
     'daily_pnl':     0.0,
+    'target_hit':    False,
     'mode':          'PAPER',
 }
 
@@ -234,10 +237,13 @@ def run_cycle():
                          f"Target: {min_tp}%-{max_tp}% | Stop: -{sl}%")
         return  # don't scan while in a trade
 
-    # ── Already traded today — done ───────────────────────────────────────────
-    if status['trades_today'] >= MAX_DAILY_TRADES:
-        log.info(f"Daily trade limit reached ({MAX_DAILY_TRADES}) — done for today")
-        return
+    # ── Already traded today — check if target hit ───────────────────────────
+    if status['daily_pnl'] >= DAILY_PROFIT_TARGET:
+        # Target hit — only trade if agents find an exceptional signal
+        log.info(f"Daily target hit (${status['daily_pnl']:.2f}) — only trading score {OVERRIDE_SCORE}+ setups")
+        status['target_hit'] = True
+    else:
+        status['target_hit'] = False
 
     # ── Scan for best opportunity ─────────────────────────────────────────────
     log.info(f"Scanning {len(WATCHLIST)} symbols...")
@@ -259,6 +265,11 @@ def run_cycle():
 
     # ── Only trade high conviction setups ────────────────────────────────────
     MIN_SCORE = 6
+    # If daily target already hit — only take exceptional signals
+    if status.get('target_hit') and best['score'] < OVERRIDE_SCORE:
+        log.info(f"Target hit — skipping score {best['score']} (need {OVERRIDE_SCORE}+ to override)")
+        return
+
     if best['score'] < MIN_SCORE:
         log.info(f"Best score {best['score']} below minimum {MIN_SCORE} — waiting")
         return
