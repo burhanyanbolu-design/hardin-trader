@@ -6,3 +6,4 @@ pytz
 flask
 flask-cors
 requests
+gunicorn

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HARDIN TRADING v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --cyan:#00e5ff;
+    --green:#00ff88;
+    --red:#ff3366;
+    --gold:#ffd700;
+    --bg:#020408;
+    --panel:#060d14;
+    --border:#0a2030;
+    --text:#c8e6f0;
+    --dim:#3a5a6a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Exo 2',sans-serif;
+    font-size:13px;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  /* Grid overlay */
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background-image:
+      linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);
+    background-size:40px 40px;
+    pointer-events:none;
+    z-index:0;
+  }
+  /* ── NAV ── */
+  nav{
+    position:sticky;top:0;z-index:100;
+    display:flex;align-items:center;gap:16px;
+    padding:0 20px;height:52px;
+    background:rgba(2,4,8,.92);
+    border-bottom:1px solid var(--border);
+    backdrop-filter:blur(8px);
+  }
+  .logo{
+    font-family:'Share Tech Mono',monospace;
+    font-size:16px;color:var(--cyan);
+    letter-spacing:3px;text-transform:uppercase;
+    flex:1;
+  }
+  .logo span{color:var(--gold)}
+  .status-pill{
+    display:flex;align-items:center;gap:6px;
+    padding:4px 12px;border-radius:20px;
+    border:1px solid var(--border);
+    font-size:11px;letter-spacing:1px;
+    font-family:'Share Tech Mono',monospace;
+  }
+  .status-pill .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--dim);transition:background .3s;
+  }
+  .status-pill.live .dot{
+    background:var(--green);
+    box-shadow:0 0 8px var(--green);
+    animation:pulse 1.5s infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .btn{
+    padding:6px 16px;border-radius:4px;border:none;
+    font-family:'Exo 2',sans-serif;font-size:12px;font-weight:600;
+    letter-spacing:1px;cursor:pointer;transition:all .2s;
+    text-transform:uppercase;
+  }
+  .btn-start{background:var(--green);color:#000}
+  .btn-stop{background:var(--red);color:#fff}
+  .btn-override{background:var(--gold);color:#000}
+  .btn:hover{filter:brightness(1.2);transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+
+  /* ── TICKER ── */
+  .ticker-wrap{
+    overflow:hidden;height:32px;
+    background:rgba(0,229,255,.04);
+    border-bottom:1px solid var(--border);
+    display:flex;align-items:center;
+  }
+  .ticker-track{
+    display:flex;gap:40px;
+    white-space:nowrap;
+    animation:scroll 30s linear infinite;
+    font-family:'Share Tech Mono',monospace;
+    font-size:12px;
+  }
+  .ticker-track:hover{animation-play-state:paused}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .tick-item{display:flex;gap:8px}
+  .tick-sym{color:var(--cyan)}
+  .tick-price{color:var(--text)}
+  .tick-chg.up{color:var(--green)}
+  .tick-chg.dn{color:var(--red)}
+
+  /* ── LAYOUT ── */
+  .layout{
+    display:flex;gap:12px;
+    padding:12px;
+    position:relative;z-index:1;
+    min-height:calc(100vh - 84px);
+  }
+  .left-panel{flex:1;display:flex;flex-direction:column;gap:12px}
+  .right-panel{width:360px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}
+
+  /* ── CARDS ── */
+  .card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:14px;
+  }
+  .card-title{
+    font-size:10px;letter-spacing:2px;text-transform:uppercase;
+    color:var(--dim);margin-bottom:12px;
+    font-family:'Share Tech Mono',monospace;
+  }
+
+  /* ── STATS ROW ── */
+  .stats-row{display:flex;gap:12px}
+  .stat-box{
+    flex:1;background:var(--panel);
+    border:1px solid var(--border);border-radius:6px;
+    padding:12px 16px;
+  }
+  .stat-label{font-size:10px;letter-spacing:2px;color:var(--dim);text-transform:uppercase}
+  .stat-value{
+    font-family:'Share Tech Mono',monospace;
+    font-size:22px;margin-top:4px;
+  }
+  .stat-value.cyan{color:var(--cyan)}
+  .stat-value.gold{color:var(--gold)}
+  .stat-value.green{color:var(--green)}
+  .stat-value.red{color:var(--red)}
+
+  /* ── ACTIVE TRADE ── */
+  .trade-symbol{
+    font-family:'Share Tech Mono',monospace;
+    font-size:36px;color:var(--cyan);
+    letter-spacing:4px;
+  }
+  .tier-badge{
+    display:inline-block;
+    padding:2px 10px;border-radius:3px;
+    font-size:10px;letter-spacing:2px;font-weight:700;
+    background:rgba(0,229,255,.12);color:var(--cyan);
+    border:1px solid rgba(0,229,255,.3);
+    margin-left:12px;vertical-align:middle;
+  }
+  .trade-grid{
+    display:grid;grid-template-columns:1fr 1fr 1fr;
+    gap:8px;margin-top:12px;
+  }
+  .trade-cell .tc-label{font-size:10px;color:var(--dim);letter-spacing:1px}
+  .trade-cell .tc-val{
+    font-family:'Share Tech Mono',monospace;
+    font-size:14px;color:var(--text);margin-top:2px;
+  }
+  /* P&L bar */
+  .pnl-bar-wrap{
+    margin-top:14px;height:6px;
+    background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;
+  }
+  .pnl-bar{height:100%;border-radius:3px;transition:width .5s,background .5s}
+  .pnl-bar.pos{background:var(--green)}
+  .pnl-bar.neg{background:var(--red)}
+  .pnl-label{
+    font-family:'Share Tech Mono',monospace;
+    font-size:13px;margin-top:6px;
+  }
+  .no-trade{color:var(--dim);font-size:13px;padding:20px 0}
+
+  /* ── CHART ── */
+  #priceChart{
+    width:100%;height:140px;display:block;
+    border-radius:4px;
+  }
+
+  /* ── BEST SIGNAL ── */
+  .signal-row{display:flex;align-items:center;gap:12px}
+  .sig-sym{
+    font-family:'Share Tech Mono',monospace;
+    font-size:24px;color:var(--cyan);
+  }
+  .sig-badge{
+    padding:3px 10px;border-radius:3px;
+    font-size:11px;font-weight:700;letter-spacing:1px;
+  }
+  .sig-badge.buy{background:rgba(0,255,136,.15);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+  .sig-badge.sell{background:rgba(255,51,102,.15);color:var(--red);border:1px solid rgba(255,51,102,.3)}
+  .sig-score{
+    font-family:'Share Tech Mono',monospace;
+    font-size:20px;color:var(--gold);margin-left:auto;
+  }
+  .sig-pattern{font-size:11px;color:var(--dim);margin-top:4px}
+
+  /* ── MEMORY ── */
+  .mem-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mem-cell .mc-label{font-size:10px;color:var(--dim);letter-spacing:1px}
+  .mem-cell .mc-val{
+    font-family:'Share Tech Mono',monospace;
+    font-size:16px;color:var(--text);margin-top:2px;
+  }
+
+  /* ── LOG ── */
+  .log-wrap{
+    flex:1;overflow-y:auto;
+    max-height:340px;
+    display:flex;flex-direction:column;gap:4px;
+    scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+  }
+  .log-entry{
+    padding:6px 8px 6px 12px;
+    border-left:3px solid var(--dim);
+    background:rgba(255,255,255,.02);
+    border-radius:0 4px 4px 0;
+    animation:fadeIn .3s ease;
+  }
+  .log-entry.info{border-left-color:var(--cyan)}
+  .log-entry.trade{border-left-color:var(--gold)}
+  .log-entry.win{border-left-color:var(--green)}
+  .log-entry.loss{border-left-color:var(--red)}
+  @keyframes fadeIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+  .log-time{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--dim)}
+  .log-msg{font-size:12px;margin-top:1px}
+
+  /* ── SCANNER ── */
+  .scanner-list{display:flex;flex-direction:column;gap:6px}
+  .scan-item{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 10px;
+    background:rgba(255,255,255,.02);
+    border:1px solid var(--border);border-radius:4px;
+    transition:background .2s;
+  }
+  .scan-item:hover{background:rgba(0,229,255,.04)}
+  .scan-sym{
+    font-family:'Share Tech Mono',monospace;
+    font-size:14px;color:var(--cyan);width:52px;
+  }
+  .scan-score{
+    font-family:'Share Tech Mono',monospace;
+    font-size:13px;color:var(--gold);margin-left:auto;
+  }
+  .scan-pattern{font-size:11px;color:var(--dim);flex:1}
+
+  /* scrollbar */
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">HARDIN <span>TRADING</span> v2</div>
+  <div class="status-pill" id="statusPill">
+    <div class="dot"></div>
+    <span id="statusText">OFFLINE</span>
+  </div>
+  <button class="btn btn-start" onclick="startBot()">START</button>
+  <button class="btn btn-stop"  onclick="stopBot()">STOP</button>
+  <button class="btn btn-override" onclick="overrideBot()">OVERRIDE</button>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-wrap">
+  <div class="ticker-track" id="tickerTrack">
+    <!-- populated by JS, doubled for seamless loop -->
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+
+    <!-- Stats row -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-label">Account Equity</div>
+        <div class="stat-value cyan" id="statEquity">$0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Buying Power</div>
+        <div class="stat-value gold" id="statCash">$0.00</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Today P&amp;L</div>
+        <div class="stat-value green" id="statPnl">$0.00</div>
+      </div>
+    </div>
+
+    <!-- Active Trade -->
+    <div class="card">
+      <div class="card-title">Active Trade</div>
+      <div id="activeTrade">
+        <div class="no-trade">No active trade</div>
+      </div>
+    </div>
+
+    <!-- Price Chart -->
+    <div class="card">
+      <div class="card-title" id="chartTitle">Price Chart</div>
+      <canvas id="priceChart"></canvas>
+    </div>
+
+    <!-- Best Signal -->
+    <div class="card">
+      <div class="card-title">Best Signal</div>
+      <div id="bestSignal"><div class="no-trade">Scanning…</div></div>
+    </div>
+
+    <!-- Agent Memory -->
+    <div class="card">
+      <div class="card-title">Agent Memory</div>
+      <div class="mem-grid" id="memGrid">
+        <div class="mem-cell"><div class="mc-label">Total Trades</div><div class="mc-val" id="memTotal">—</div></div>
+        <div class="mem-cell"><div class="mc-label">Win Rate</div><div class="mc-val" id="memWR">—</div></div>
+        <div class="mem-cell"><div class="mc-label">Total Profit</div><div class="mc-val" id="memProfit">—</div></div>
+        <div class="mem-cell"><div class="mc-label">Best Pattern</div><div class="mc-val" id="memBest">—</div></div>
+      </div>
+    </div>
+
+  </div><!-- /left-panel -->
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- Live Activity Log -->
+    <div class="card" style="flex:1;display:flex;flex-direction:column">
+      <div class="card-title">Live Activity Log</div>
+      <div class="log-wrap" id="logWrap"></div>
+    </div>
+
+    <!-- Signal Scanner -->
+    <div class="card">
+      <div class="card-title">Signal Scanner</div>
+      <div class="scanner-list" id="scannerList">
+        <div class="no-trade">Loading signals…</div>
+      </div>
+    </div>
+
+  </div><!-- /right-panel -->
+
+</div><!-- /layout -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const logEntries = [];
+let chartBars    = [];
+let lastStatus   = {};
+let tickerData   = {};
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const fmt  = (n, d=2) => Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtD = (n) => (n>=0?'+':'')+fmt(n);
+const now  = () => new Date().toLocaleTimeString('en-US',{hour12:false});
+
+function addLog(msg, type='info'){
+  logEntries.unshift({msg, type, time: now()});
+  if(logEntries.length > 80) logEntries.pop();
+  renderLog();
+}
+
+function renderLog(){
+  const wrap = document.getElementById('logWrap');
+  wrap.innerHTML = logEntries.map(e=>`
+    <div class="log-entry ${e.type}">
+      <div class="log-time">${e.time}</div>
+      <div class="log-msg">${e.msg}</div>
+    </div>`).join('');
+}
+
+// ── Chart ──────────────────────────────────────────────────────────────────
+function drawChart(bars){
+  const canvas = document.getElementById('priceChart');
+  const ctx    = canvas.getContext('2d');
+  canvas.width  = canvas.offsetWidth  || 600;
+  canvas.height = canvas.offsetHeight || 140;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  if(!bars || bars.length < 2) return;
+
+  const closes = bars.map(b=>b.close);
+  const minP   = Math.min(...closes);
+  const maxP   = Math.max(...closes);
+  const range  = maxP - minP || 1;
+  const pad    = {t:10,b:24,l:8,r:60};
+  const cW     = W - pad.l - pad.r;
+  const cH     = H - pad.t - pad.b;
+
+  const xOf = i => pad.l + (i/(closes.length-1))*cW;
+  const yOf = v => pad.t + (1-(v-minP)/range)*cH;
+
+  const rising = closes[closes.length-1] >= closes[0];
+  const lineColor = rising ? '#00ff88' : '#ff3366';
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(0,229,255,.06)';
+  ctx.lineWidth   = 1;
+  for(let i=0;i<4;i++){
+    const y = pad.t + (i/3)*cH;
+    ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+  }
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+  grad.addColorStop(0, rising ? 'rgba(0,255,136,.25)' : 'rgba(255,51,102,.25)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(closes[0]));
+  for(let i=1;i<closes.length;i++) ctx.lineTo(xOf(i), yOf(closes[i]));
+  ctx.lineTo(xOf(closes.length-1), H-pad.b);
+  ctx.lineTo(xOf(0), H-pad.b);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOf(closes[0]));
+  for(let i=1;i<closes.length;i++) ctx.lineTo(xOf(i), yOf(closes[i]));
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+
+  // Current price label
+  const last = closes[closes.length-1];
+  const lx   = xOf(closes.length-1);
+  const ly   = yOf(last);
+  ctx.fillStyle   = lineColor;
+  ctx.font        = '11px "Share Tech Mono"';
+  ctx.textAlign   = 'left';
+  ctx.fillText('$'+fmt(last), lx+6, ly+4);
+
+  // Dot
+  ctx.beginPath();
+  ctx.arc(lx, ly, 4, 0, Math.PI*2);
+  ctx.fillStyle = lineColor;
+  ctx.fill();
+}
+
+// ── Render active trade ────────────────────────────────────────────────────
+function renderActiveTrade(t){
+  const el = document.getElementById('activeTrade');
+  if(!t){ el.innerHTML='<div class="no-trade">No active trade</div>'; return; }
+
+  const plpc  = t.live_plpc || 0;
+  const barW  = Math.min(Math.abs(plpc)*10, 100);
+  const plCls = plpc >= 0 ? 'pos' : 'neg';
+  const plCol = plpc >= 0 ? 'var(--green)' : 'var(--red)';
+
+  el.innerHTML = `
+    <div>
+      <span class="trade-symbol">${t.symbol||'—'}</span>
+      <span class="tier-badge">${t.tier||''}</span>
+    </div>
+    <div class="trade-grid">
+      <div class="trade-cell"><div class="tc-label">Signal</div><div class="tc-val">${t.signal||'—'}</div></div>
+      <div class="trade-cell"><div class="tc-label">Entry</div><div class="tc-val">$${fmt(t.entry||0)}</div></div>
+      <div class="trade-cell"><div class="tc-label">Size</div><div class="tc-val">${t.qty||0} sh</div></div>
+      <div class="trade-cell"><div class="tc-label">Target</div><div class="tc-val">$${fmt(t.target||0)}</div></div>
+      <div class="trade-cell"><div class="tc-label">Stop</div><div class="tc-val">$${fmt(t.stop||0)}</div></div>
+      <div class="trade-cell"><div class="tc-label">Score</div><div class="tc-val">${t.score||0}</div></div>
+    </div>
+    <div class="pnl-bar-wrap">
+      <div class="pnl-bar ${plCls}" style="width:${barW}%"></div>
+    </div>
+    <div class="pnl-label" style="color:${plCol}">${fmtD(plpc)}%</div>`;
+
+  // Fetch chart for active symbol
+  fetchBars(t.symbol);
+  document.getElementById('chartTitle').textContent = `Price Chart — ${t.symbol}`;
+}
+
+// ── Render best signal ─────────────────────────────────────────────────────
+function renderBestSignal(s){
+  const el = document.getElementById('bestSignal');
+  if(!s){ el.innerHTML='<div class="no-trade">No signal</div>'; return; }
+  const dir = (s.signal||'BUY').toUpperCase();
+  el.innerHTML = `
+    <div class="signal-row">
+      <div class="sig-sym">${s.symbol||'—'}</div>
+      <span class="sig-badge ${dir==='BUY'?'buy':'sell'}">${dir}</span>
+      <div class="sig-score">${s.score||0}</div>
+    </div>
+    <div class="sig-pattern">${s.pattern||''}</div>`;
+}
+
+// ── Render memory ──────────────────────────────────────────────────────────
+function renderMemory(m){
+  if(!m) return;
+  document.getElementById('memTotal').textContent  = m.total||0;
+  document.getElementById('memWR').textContent     = (m.win_rate||0)+'%';
+  document.getElementById('memProfit').textContent = '$'+fmt(m.total_profit||0);
+  document.getElementById('memBest').textContent   = m.best_pattern||'—';
+}
+
+// ── Render scanner ─────────────────────────────────────────────────────────
+function renderScanner(signals){
+  const el = document.getElementById('scannerList');
+  if(!signals||!signals.length){
+    el.innerHTML='<div class="no-trade">No signals</div>'; return;
+  }
+  el.innerHTML = signals.map(s=>{
+    const dir = (s.signal||'BUY').toUpperCase();
+    return `<div class="scan-item">
+      <div class="scan-sym">${s.symbol}</div>
+      <span class="sig-badge ${dir==='BUY'?'buy':'sell'}">${dir}</span>
+      <div class="scan-pattern">${s.pattern||''}</div>
+      <div class="scan-score">${s.score}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Ticker ─────────────────────────────────────────────────────────────────
+const WATCHLIST = ['AAPL','NVDA','TSLA','AMD','META','SPY','QQQ','MSFT'];
+
+async function fetchTicker(){
+  const items = WATCHLIST.map(sym=>{
+    const d = tickerData[sym]||{};
+    const chg = d.chg||0;
+    const cls = chg>=0?'up':'dn';
+    const sign= chg>=0?'+':'';
+    return `<div class="tick-item">
+      <span class="tick-sym">${sym}</span>
+      <span class="tick-price">${d.price?'$'+fmt(d.price):'—'}</span>
+      <span class="tick-chg ${cls}">${d.price?(sign+fmt(chg,2)+'%'):'—'}</span>
+    </div>`;
+  }).join('');
+  // Double for seamless loop
+  document.getElementById('tickerTrack').innerHTML = items+items;
+
+  // Fetch prices async (best-effort via bars)
+  for(const sym of WATCHLIST){
+    try{
+      const r = await fetch(`/api/bars/${sym}`);
+      const bars = await r.json();
+      if(bars&&bars.length>=2){
+        const last  = bars[bars.length-1].close;
+        const first = bars[0].close;
+        tickerData[sym] = {price:last, chg:((last-first)/first)*100};
+      }
+    }catch(e){}
+  }
+}
+
+// ── fetchBars ──────────────────────────────────────────────────────────────
+async function fetchBars(symbol){
+  if(!symbol) return;
+  try{
+    const r = await fetch(`/api/bars/${symbol}`);
+    chartBars = await r.json();
+    drawChart(chartBars);
+  }catch(e){}
+}
+
+// ── fetchStatus ────────────────────────────────────────────────────────────
+async function fetchStatus(){
+  try{
+    const r = await fetch('/api/status');
+    const d = await r.json();
+
+    // Status pill
+    const pill = document.getElementById('statusPill');
+    const txt  = document.getElementById('statusText');
+    if(d.running){ pill.classList.add('live'); txt.textContent='LIVE'; }
+    else          { pill.classList.remove('live'); txt.textContent='OFFLINE'; }
+
+    // Stats
+    document.getElementById('statEquity').textContent = '$'+fmt(d.equity||0);
+    document.getElementById('statCash').textContent   = '$'+fmt(d.cash||0);
+    const pnl    = d.daily_pnl||0;
+    const pnlEl  = document.getElementById('statPnl');
+    pnlEl.textContent = (pnl>=0?'+':'')+fmt(pnl);
+    pnlEl.className   = 'stat-value '+(pnl>=0?'green':'red');
+
+    // Active trade
+    renderActiveTrade(d.active_trade);
+
+    // Best signal
+    renderBestSignal(d.best_signal);
+
+    // Memory
+    renderMemory(d.memory);
+
+    // Log new trade_log entries
+    if(d.trade_log&&d.trade_log.length){
+      const prev = lastStatus.trade_log||[];
+      const newEntries = d.trade_log.slice(prev.length);
+      newEntries.forEach(t=>{
+        addLog(`${t.side} ${t.qty}x ${t.symbol} @ $${fmt(t.price)}`, 'trade');
+      });
+    }
+
+    // Error log
+    if(d.error && d.error !== (lastStatus.error||null)){
+      addLog('ERROR: '+d.error, 'loss');
+    }
+
+    lastStatus = d;
+  }catch(e){
+    addLog('Status fetch failed: '+e.message, 'loss');
+  }
+}
+
+// ── fetchSignals ───────────────────────────────────────────────────────────
+async function fetchSignals(){
+  try{
+    const r = await fetch('/api/signals');
+    const signals = await r.json();
+    if(Array.isArray(signals)) renderScanner(signals);
+  }catch(e){}
+}
+
+// ── Bot controls ───────────────────────────────────────────────────────────
+async function startBot(){
+  addLog('Starting bot…','info');
+  await fetch('/api/start',{method:'POST'});
+  fetchStatus();
+}
+async function stopBot(){
+  addLog('Stopping bot…','info');
+  await fetch('/api/stop',{method:'POST'});
+  fetchStatus();
+}
+async function overrideBot(){
+  addLog('Override triggered — resetting daily limits','trade');
+  await fetch('/api/override',{method:'POST'});
+  fetchStatus();
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+addLog('Dashboard initialised','info');
+fetchStatus();
+fetchSignals();
+fetchTicker();
+
+setInterval(fetchStatus,  5000);
+setInterval(fetchSignals, 20000);
+setInterval(fetchTicker,  30000);
+
+window.addEventListener('resize', ()=>drawChart(chartBars));
+</script>
+</body>
+</html>
