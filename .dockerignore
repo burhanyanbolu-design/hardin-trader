@@ -1,0 +1,6 @@
+.git
+__pycache__
+*.pyc
+.env
+agent_memory.json
+trade_log.jsonl
