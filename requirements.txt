@@ -1,4 +1,4 @@
-alpaca-trade-api==3.3.2
+alpaca-trade-api==3.2.0
 pandas>=1.5.0
 numpy>=1.23.0
 python-dotenv>=1.0.0
