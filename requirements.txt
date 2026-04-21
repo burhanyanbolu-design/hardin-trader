@@ -1,5 +1,5 @@
 # v2
-alpaca-trade-api
+alpaca-py
 pandas
 numpy
 python-dotenv

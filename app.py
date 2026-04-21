@@ -53,7 +53,10 @@ def api_status():
         sym = active.get('symbol')
         if sym and sym in positions:
             pos = positions[sym]
-            active = {**active, 'live_plpc': float(pos.unrealized_plpc) * 100}
+            # unrealized_plpc is already a decimal in alpaca-py (e.g. 0.015 = 1.5%)
+            raw_plpc = float(pos.unrealized_plpc)
+            live_plpc = raw_plpc * 100 if abs(raw_plpc) < 1 else raw_plpc
+            active = {**active, 'live_plpc': round(live_plpc, 3)}
         else:
             active = {**active, 'live_plpc': 0.0}
 
