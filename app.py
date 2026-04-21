@@ -4,6 +4,8 @@ Hardin Trading Software v2 — Flask Dashboard
 import os
 import threading
 from flask import Flask, jsonify, render_template, request
+from apscheduler.schedulers.background import BackgroundScheduler
+import pytz
 
 import trader
 from agent_memory import AgentMemory
@@ -30,6 +32,12 @@ def _start_bot_thread():
 
 def _stop_bot():
     trader.stop_bot()
+
+# ── Auto scheduler — 9:25am start, 4:00pm stop (New York time) ───────────────
+_scheduler = BackgroundScheduler(timezone=pytz.timezone('America/New_York'))
+_scheduler.add_job(_start_bot_thread, 'cron', day_of_week='mon-fri', hour=9,  minute=25)
+_scheduler.add_job(_stop_bot,         'cron', day_of_week='mon-fri', hour=16, minute=0)
+_scheduler.start()
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 
@@ -70,6 +78,7 @@ def api_status():
         'daily_pnl':    round(daily_pnl, 2),
         'memory':       mem_stats,
         'trade_log':    trader.trade_log[-20:],
+        'auto_schedule': 'Mon-Fri: Auto-start 9:25am NY · Auto-stop 4:00pm NY',
     })
 
 
