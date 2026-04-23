@@ -9,3 +9,4 @@ flask-cors
 requests
 gunicorn
 apscheduler
+yfinance
