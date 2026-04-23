@@ -274,7 +274,33 @@
   <button class="btn btn-start" onclick="startBot()">START</button>
   <button class="btn btn-stop"  onclick="stopBot()">STOP</button>
   <button class="btn btn-override" onclick="overrideBot()">OVERRIDE</button>
+  <button class="btn" style="background:#7c3aed;color:#fff" onclick="showBacktest()">BACKTEST</button>
 </nav>
+
+<!-- BACKTEST MODAL -->
+<div id="backtestModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;overflow-y:auto;padding:20px">
+  <div style="max-width:700px;margin:0 auto;background:#060d14;border:1px solid #0a2030;border-radius:8px;padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:16px;color:#00e5ff;letter-spacing:3px">BACKTEST ENGINE</div>
+      <button onclick="closeBacktest()" style="background:none;border:none;color:#ff3366;font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:16px">
+      <select id="btDays" style="background:#020408;color:#c8e6f0;border:1px solid #0a2030;padding:8px 12px;border-radius:4px;flex:1">
+        <option value="30">Last 30 days</option>
+        <option value="60">Last 60 days</option>
+        <option value="90" selected>Last 90 days</option>
+        <option value="180">Last 180 days</option>
+      </select>
+      <button class="btn" style="background:#7c3aed;color:#fff;flex:1" onclick="runBacktest()">RUN BACKTEST</button>
+    </div>
+    <div id="btStatus" style="color:#3a5a6a;font-size:12px;margin-bottom:12px"></div>
+    <div id="btResults" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px" id="btStats"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;color:#3a5a6a;margin-bottom:8px">RECENT TRADES</div>
+      <div id="btTrades" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+    </div>
+  </div>
+</div>
 
 <!-- TICKER -->
 <div class="ticker-wrap">
