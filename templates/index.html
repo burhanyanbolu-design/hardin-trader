@@ -474,10 +474,10 @@ function renderActiveTrade(t){
     </div>
     <div class="trade-grid">
       <div class="trade-cell"><div class="tc-label">Signal</div><div class="tc-val">${t.signal||'—'}</div></div>
-      <div class="trade-cell"><div class="tc-label">Entry</div><div class="tc-val">$${fmt(t.entry||0)}</div></div>
+      <div class="trade-cell"><div class="tc-label">Entry</div><div class="tc-val">$${fmt(t.entry_price||t.entry||0)}</div></div>
       <div class="trade-cell"><div class="tc-label">Size</div><div class="tc-val">${t.qty||0} sh</div></div>
-      <div class="trade-cell"><div class="tc-label">Target</div><div class="tc-val">$${fmt(t.target||0)}</div></div>
-      <div class="trade-cell"><div class="tc-label">Stop</div><div class="tc-val">$${fmt(t.stop||0)}</div></div>
+      <div class="trade-cell"><div class="tc-label">Target</div><div class="tc-val">$${(t.min_target_pct||t.target||0)+"%"}</div></div>
+      <div class="trade-cell"><div class="tc-label">Stop</div><div class="tc-val">$${(t.stop_loss_pct||t.stop||0)+"%"}</div></div>
       <div class="trade-cell"><div class="tc-label">Score</div><div class="tc-val">${t.score||0}</div></div>
     </div>
     <div class="pnl-bar-wrap">
@@ -730,3 +730,4 @@ window.addEventListener('resize', ()=>drawChart(chartBars));
 </script>
 </body>
 </html>
+
